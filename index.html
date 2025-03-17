@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="cdn-site-verification" content="fBrr15y250bxJH"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-URL Proxy</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <form id="proxyForm">
+            <textarea id="urlInput" placeholder="Enter URLs (one per line)" required></textarea>
+            <button type="submit">Process URLs</button>
+        </form>
+        <div id="results"></div>
+        <div id="bulkActionsContainer" style="display: none;">
+            <button id="copyAllBtn" class="bulk-action-btn copy-all-btn">Copy All Links</button>
+            <button id="downloadAllBtn" class="bulk-action-btn download-all-btn">Download All Links (.txt)</button>
+            <span id="actionMessage" class="action-message"></span>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
+
