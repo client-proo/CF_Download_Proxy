@@ -20,6 +20,7 @@ Iranian users can access our services at half bandwidth using the services of th
 
 <div dir="rtl">
 کاربران ایرانی می‌توانند با استفاده از سرویس های این سایت، به سرویس ما به صورت نیم بها دسترسی پیدا کنند: https://cdn.ir
+
 </div>
 
 ## Features | ویژگی‌ها
@@ -77,7 +78,9 @@ Please edit the second line of the worker.js_ file and enter your Worker or half
 ## نیم بها کردن سایت
 برای نیم بها کردن سایتتون اول باید یک Custom domain به ورکر یا Pages خودتون اضافه کنید و اون رو در سامانه cdn.ir قسمت توزیع ابری اضافه کنید و بعد از اون دامنه نمیبهاتون رو در خط دوم فایل worker.js_ قرار بدین.
 
+
 ## Contact
+Since this code was written with the help of AI, it may have Bugs.
 For any questions or feedback, please open an issue or contact the [repository owner](https://GeekSpotSupbot.t.me).
 
 
