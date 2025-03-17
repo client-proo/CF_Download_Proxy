@@ -16,7 +16,7 @@ This project provides a proxy solution for downloading content through the Cloud
 
 ## Note for Iranian Users | توجه برای کاربران ایرانی
 
-Iranian users can access our services at half price using the services of this site: [https://cdn.ir/](https://cdn.ir/)
+Iranian users can access our services at half bandwidth using the services of this site: [https://cdn.ir/](https://cdn.ir/)
 
 <div dir="rtl">
 کاربران ایرانی می‌توانند با استفاده از سرویس های این سایت، به سرویس ما به صورت نیم بها دسترسی پیدا کنند: https://cdn.ir
@@ -64,6 +64,21 @@ Iranian users can access our services at half price using the services of this s
    - دانلود تمام لینک‌ها به عنوان یک فایل متنی
 </div>
 
+To make your website half-bandwidth (for Iranian internet users), you first need to add a custom domain to your Worker or Pages. Then, register it in the cdn.ir system under the "Cloud Distribution" section. After that, place your half-bandwidth domain in the second line of the worker.js_ file.
+
+## Note | نکته
+Please edit the second line of the worker.js_ file and enter your Worker or half-bandwidth domain.
+
+لطفا خط دوم فایل worker.js_ رو ویرایش کنید و دامنه پیجتون یا نیم بها رو وارد کنید.
+
+
+
+ 
+## نیم بها کردن سایت
+برای نیم بها کردن سایتتون اول باید یک Custom domain به ورکر یا Pages خودتون اضافه کنید و اون رو در سامانه cdn.ir قسمت توزیع ابری اضافه کنید و بعد از اون دامنه نمیبهاتون رو در خط دوم فایل worker.js_ قرار بدین.
+
+## Contact
+For any questions or feedback, please open an issue or contact the [repository owner](https://GeekSpotSupbot.t.me).
 
 
 ## Share and Join my channel 🫂🤍
