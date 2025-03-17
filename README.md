@@ -19,7 +19,7 @@ This project provides a proxy solution for downloading content through the Cloud
 Iranian users can access our services at half price using the services of this site: [https://cdn.ir/](https://cdn.ir/)
 
 <div dir="rtl">
-کاربران ایرانی می‌توانند با استفاده از سرویس های این سایت، به سرویس ما به صورت نیم بها دسترسی پیدا کنند: [https://cdn.ir/](https://cdn.ir/)
+کاربران ایرانی می‌توانند با استفاده از سرویس های این سایت، به سرویس ما به صورت نیم بها دسترسی پیدا کنند: https://cdn.ir
 </div>
 
 ## Features | ویژگی‌ها
