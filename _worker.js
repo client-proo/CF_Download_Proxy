@@ -1,6 +1,11 @@
 // دامنه ورکرتون یا نیم بهارو اینجا بزارید 
 const Domain = 'https://nimbaha.ir.cdn.ir'; 
 
+// تنظیمات احراز هویت HTTP
+const AUTH_ENABLED = false; // تغییر به true یا false برای فعال/غیرفعال کردن احراز هویت
+const USERNAME = 'admin';  // نام کاربری را اینجا تغییر دهید
+const PASSWORD = 'proxy123'; // رمز عبور را اینجا تغییر دهید
+
 // کش برای ذخیره نتایج درخواست‌های تکراری
 const cache = new Map();
 
@@ -14,6 +19,25 @@ function fromBase64(b64) {
     } catch (error) {
         throw new Error('Invalid Base64 string');
     }
+}
+
+// تابع بررسی احراز هویت HTTP Basic
+function checkAuth(request) {
+    // اگر احراز هویت غیرفعال است، همیشه اجازه دسترسی بدهید
+    if (!AUTH_ENABLED) return true;
+    
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Basic ')) {
+        return false;
+    }
+    
+    // دریافت کردن اطلاعات احراز هویت از هدر
+    const encodedCredentials = authHeader.split(' ')[1];
+    const decodedCredentials = atob(encodedCredentials);
+    const [username, password] = decodedCredentials.split(':');
+    
+    // بررسی نام کاربری و رمز عبور
+    return username === USERNAME && password === PASSWORD;
 }
 
 export default {
@@ -31,6 +55,20 @@ export default {
         // پاسخ به درخواست‌های OPTIONS
         if (request.method === 'OPTIONS') {
             return new Response(null, { headers: corsHeaders });
+        }
+
+        // بررسی احراز هویت برای همه درخواست‌ها به جز فایل‌های استاتیک
+        if (!pathname.endsWith('.css') && !pathname.endsWith('.js')) {
+            // بررسی احراز هویت
+            if (!checkAuth(request)) {
+                return new Response('Unauthorized', {
+                    status: 401,
+                    headers: {
+                        ...corsHeaders,
+                        'WWW-Authenticate': 'Basic realm="Multi-URL Proxy", charset="UTF-8"'
+                    }
+                });
+            }
         }
 
         if (pathname === '/proxy') {
