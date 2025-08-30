@@ -14,7 +14,6 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
 
     // Track all successful proxied URLs and their filenames
     const allProxiedUrls = [];
-    const allProxiedUrlsWithPlayer = []; // اضافه برای لینک‌های ویدیویی
     const allFilenames = [];
 
     // محدود کردن تعداد درخواست‌های همزمان
@@ -24,6 +23,7 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
 
     async function queuedFetch(url) {
         if (activeFetches >= maxConcurrentRequests) {
+            // اگر تعداد درخواست‌های فعال به حداکثر رسیده، به صف افزوده می‌شود
             return new Promise(resolve => {
                 fetchQueue.push(() => {
                     activeFetches++;
@@ -87,7 +87,6 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
             // Add to our collections
             allProxiedUrls.push(data.proxiedUrl);
             allFilenames.push(data.filename);
-            allProxiedUrlsWithPlayer.push(data); // ذخیره برای پخش آنلاین
 
             // Update the result container with the proxied URL
             resultDiv.innerHTML = `
@@ -97,7 +96,6 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
                 <div class="action-buttons">
                     <a class="download-btn" href="${data.proxiedUrl}" target="_blank">دانلود</a>
                     <button class="copy-btn" data-url="${data.proxiedUrl}">کپی لینک</button>
-                    ${data.playerUrl ? `<a class="play-btn" href="${data.playerUrl}" target="_blank">پخش آنلاین</a>` : ''}
                 </div>
             `;
 
@@ -135,16 +133,6 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
         document.getElementById('downloadAllBtn').addEventListener('click', function() {
             downloadAllLinks(allProxiedUrls, allFilenames);
         });
-
-        // Add event listener for Play All button (پخش آنلاین همه لینک‌های ویدیویی)
-        document.getElementById('playAllBtn').addEventListener('click', function() {
-            const videoLinks = allProxiedUrlsWithPlayer.filter(i => i.playerUrl);
-            if (videoLinks.length === 0) {
-                showActionMessage("هیچ لینک ویدیویی برای پخش آنلاین وجود ندارد!", true);
-                return;
-            }
-            videoLinks.forEach(i => window.open(i.playerUrl, "_blank"));
-        });
     }
 });
 
@@ -165,17 +153,24 @@ async function cachedFetch(url) {
 // Function to copy text to clipboard
 function copyToClipboard(text, buttonElement, message = 'Copied!') {
     navigator.clipboard.writeText(text).then(function() {
+        // Show success message on button
         const originalText = buttonElement.textContent;
         buttonElement.textContent = 'Copied!';
+
+        // Reset button text after 2 seconds
         setTimeout(() => {
             buttonElement.textContent = originalText;
         }, 2000);
+
+        // If this is a bulk action, also show message in the span
         if (buttonElement.id === 'copyAllBtn') {
             showActionMessage(message);
         }
     })
     .catch(function(error) {
         console.error('Could not copy text: ', error);
+
+        // Show error message
         if (buttonElement.id === 'copyAllBtn') {
             showActionMessage('Failed to copy. Try again.', true);
         }
@@ -185,21 +180,30 @@ function copyToClipboard(text, buttonElement, message = 'Copied!') {
 // Function to download all links as a text file
 function downloadAllLinks(urls, filenames) {
     try {
+        // Create content for the text file
         let content = '';
         for (let i = 0; i < urls.length; i++) {
             content += `${filenames[i]}:\n${urls[i]}\n`;
         }
 
+        // Create a blob with the content
         const blob = new Blob([content], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
+
+        // Create a temporary link and trigger the download
         const downloadLink = document.createElement('a');
         downloadLink.href = url;
         downloadLink.download = `proxied_links_${new Date().toISOString().slice(0,10)}.txt`;
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
+
+        // Release the object URL
         URL.revokeObjectURL(url);
+
+        // Show success message
         showActionMessage('Links downloaded as text file!');
+
     } catch (error) {
         console.error('Could not download links: ', error);
         showActionMessage('Failed to download. Try again.', true);
@@ -211,11 +215,13 @@ function showActionMessage(message, isError = false) {
     const messageElement = document.getElementById('actionMessage');
     messageElement.textContent = message;
     messageElement.style.opacity = '1';
+
     if (isError) {
         messageElement.classList.add('error');
     } else {
         messageElement.classList.remove('error');
     }
+
     setTimeout(() => {
         messageElement.style.opacity = '0';
     }, 2000);
