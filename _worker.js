@@ -1,5 +1,5 @@
 // دامنه ورکرتون یا نیم بهارو اینجا بزارید 
-const Domain = 'https://nimbaha.ir.cdn.ir'; 
+const Domain = 'https://nimbaha.363178.ir.cdn.ir'; 
 
 // تنظیمات احراز هویت HTTP
 const AUTH_ENABLED = false; // تغییر به true یا false برای فعال/غیرفعال کردن احراز هویت
