@@ -7,6 +7,7 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
     resultsContainer.innerHTML = '';
     const bulkActionsContainer = document.getElementById('bulkActionsContainer');
     bulkActionsContainer.style.display = 'none';
+
     const allProxiedUrls = [];
     const allProxiedUrlsWithPlayer = [];
     const allFilenames = [];
@@ -24,7 +25,7 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
                         .then(response => {
                             activeFetches--;
                             processQueue();
-                            return resolve(response);
+                            resolve(response);
                         })
                         .catch(error => {
                             activeFetches--;
@@ -36,16 +37,8 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
         }
         activeFetches++;
         return fetch(url)
-            .then(response => {
-                activeFetches--;
-                processQueue();
-                return response;
-            })
-            .catch(error => {
-                activeFetches--;
-                processQueue();
-                throw error;
-            });
+            .then(response => { activeFetches--; processQueue(); return response; })
+            .catch(error => { activeFetches--; processQueue(); throw error; });
     }
 
     function processQueue() {
@@ -59,12 +52,12 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
         const trimmedUrl = url.trim();
         if (!trimmedUrl) continue;
 
-        try {
-            const resultDiv = document.createElement('div');
-            resultDiv.className = 'result-item';
-            resultsContainer.appendChild(resultDiv);
-            resultDiv.innerHTML = `<div class="url-original">${trimmedUrl}</div><div class="loading">Processing...</div>`;
+        const resultDiv = document.createElement('div');
+        resultDiv.className = 'result-item';
+        resultsContainer.appendChild(resultDiv);
+        resultDiv.innerHTML = `<div class="url-original">${trimmedUrl}</div><div class="loading">Processing...</div>`;
 
+        try {
             const response = await queuedFetch(`/proxy?url=${encodeURIComponent(trimmedUrl)}`);
             const data = await response.json();
 
@@ -84,19 +77,19 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
             `;
 
             resultDiv.querySelector('.copy-btn').addEventListener('click', function() {
-                const urlToCopy = this.getAttribute('data-url');
-                copyToClipboard(urlToCopy, this);
+                copyToClipboard(this.getAttribute('data-url'), this);
             });
 
         } catch (error) {
             const resultDiv = document.createElement('div');
             resultDiv.className = 'result-item error';
-            resultDiv.innerHTML = `<div class="url-original">${trimmedUrl}</div><div class="error-message">Error: ${error.message}</div>`;
+            resultDiv.innerHTML = `
+                <div class="url-original">${trimmedUrl}</div>
+                <div class="error-message">Error: ${error.message}</div>
+            `;
             resultsContainer.appendChild(resultDiv);
         }
     }
-
-    resultsContainer.style.display = 'block';
 
     if (allProxiedUrls.length > 0) {
         bulkActionsContainer.style.display = 'flex';
