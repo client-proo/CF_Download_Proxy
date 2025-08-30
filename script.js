@@ -126,7 +126,7 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
 
         // Add event listener for Copy All button
         document.getElementById('copyAllBtn').addEventListener('click', function() {
-            copyToClipboard(allProxiedUrls.join('\n'), this, 'همه لینک ها در کلیپ بورد کپی شدند!');
+            copyToClipboard(allProxiedUrls.join('\n'), this, '!همه لینک ها در کلیپ بورد کپی شدند');
         });
 
         // Add event listener for Download All button
@@ -151,11 +151,11 @@ async function cachedFetch(url) {
 }
 
 // Function to copy text to clipboard
-function copyToClipboard(text, buttonElement, message = 'کپی شد!') {
+function copyToClipboard(text, buttonElement, message = '!کپی شد') {
     navigator.clipboard.writeText(text).then(function() {
         // Show success message on button
         const originalText = buttonElement.textContent;
-        buttonElement.textContent = 'کپی شد!';
+        buttonElement.textContent = '!کپی شد';
 
         // Reset button text after 2 seconds
         setTimeout(() => {
@@ -202,7 +202,7 @@ function downloadAllLinks(urls, filenames) {
         URL.revokeObjectURL(url);
 
         // Show success message
-        showActionMessage('لینک ها به صورت فایل متنی دانلود شدند!');
+        showActionMessage('!لینک ها به صورت فایل متنی دانلود شدند');
 
     } catch (error) {
         console.error('Could not download links: ', error);
