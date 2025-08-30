@@ -23,7 +23,6 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
 
     async function queuedFetch(url) {
         if (activeFetches >= maxConcurrentRequests) {
-            // اگر تعداد درخواست‌های فعال به حداکثر رسیده، به صف افزوده می‌شود
             return new Promise(resolve => {
                 fetchQueue.push(() => {
                     activeFetches++;
@@ -89,14 +88,26 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
             allFilenames.push(data.filename);
 
             // Update the result container with the proxied URL
+            let actionButtons = `
+                <div class="action-buttons">
+                    <a class="download-btn" href="${data.proxiedUrl}" target="_blank">دانلود</a>
+                    <button class="copy-btn" data-url="${data.proxiedUrl}">کپی لینک</button>
+            `;
+            // اگر فایل ویدیویی باشد، دکمه پخش آنلاین اضافه می‌شود
+            if (data.playerUrl) {
+                actionButtons += `
+                    <a class="play-btn" href="${data.playerUrl}" target="_blank">پخش آنلاینZurück
+
+                    آنلاین</a>
+                `;
+            }
+            actionButtons += `</div>`;
+
             resultDiv.innerHTML = `
                 <div class="url-original">${trimmedUrl}</div>
                 <div class="url-proxied">${data.proxiedUrl}</div>
                 <div class="filename">نام فایل: ${data.filename}</div>
-                <div class="action-buttons">
-                    <a class="download-btn" href="${data.proxiedUrl}" target="_blank">دانلود</a>
-                    <button class="copy-btn" data-url="${data.proxiedUrl}">کپی لینک</button>
-                </div>
+                ${actionButtons}
             `;
 
             // Add event listener to the copy button
