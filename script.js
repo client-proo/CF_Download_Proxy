@@ -94,9 +94,10 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
                 <div class="url-proxied">${data.proxiedUrl}</div>
                 <div class="filename">نام فایل: ${data.filename}</div>
                 <div class="action-buttons">
-                    <a class="download-btn" href="${data.proxiedUrl}" target="_blank">دانلود</a>
-                    <button class="copy-btn" data-url="${data.proxiedUrl}">کپی لینک</button>
-                </div>
+    <a class="download-btn" href="${data.proxiedUrl}" target="_blank">دانلود</a>
+    <button class="play-btn" data-url="${data.proxiedUrl}">پخش آنلاین</button>
+    <button class="copy-btn" data-url="${data.proxiedUrl}">کپی لینک</button>
+</div>
             `;
 
             // Add event listener to the copy button
