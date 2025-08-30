@@ -142,7 +142,6 @@ button:active {
     margin-top: 10px;
 }
 
-/* دکمه‌های دانلود و کپی */
 .download-btn, .copy-btn {
     display: inline-block;
     padding: 8px 16px;
@@ -169,29 +168,6 @@ button:active {
 }
 
 .download-btn:active, .copy-btn:active {
-    transform: translateY(0);
-}
-
-/* ===== استایل جدا برای دکمه پخش آنلاین ===== */
-.play-btn {
-    display: inline-block;
-    padding: 8px 16px;
-    background-color: var(--download-button-bg); /* رنگ آبی مشابه دکمه دانلود */
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background-color 0.3s, transform 0.1s;
-    font-size: 0.9em;
-}
-
-.play-btn:hover {
-    background-color: var(--download-button-hover);
-    transform: translateY(-2px);
-}
-
-.play-btn:active {
     transform: translateY(0);
 }
 
@@ -260,7 +236,7 @@ button:active {
         flex-direction: column;
     }
 
-    .download-btn, .copy-btn, .play-btn {
+    .download-btn, .copy-btn {
         width: 100%;
         text-align: center;
     }
