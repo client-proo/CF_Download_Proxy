@@ -96,7 +96,7 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
                 <div class="action-buttons">
                     <a class="download-btn" href="${data.proxiedUrl}" target="_blank">دانلود</a>
                     <button class="copy-btn" data-url="${data.proxiedUrl}">کپی لینک</button>
-                    ${data.playerUrl ? `<a class="watch-btn" href="${data.playerUrl}" target="_blank">پخش آنلاین 🎥</a>` : ''}
+                    ${data.playerUrl ? `<a class="watch-btn" href="${data.playerUrl}" target="_blank">پخش آنلاین</a>` : ''}
                 </div>
             `;
 
