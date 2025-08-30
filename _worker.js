@@ -23,6 +23,7 @@ function fromBase64(b64) {
 
 // تابع بررسی احراز هویت HTTP Basic
 function checkAuth(request) {
+    // اگر احراز هویت غیرفعال است، همیشه اجازه دسترسی بدهید
     if (!AUTH_ENABLED) return true;
 
     const authHeader = request.headers.get('Authorization');
@@ -30,18 +31,13 @@ function checkAuth(request) {
         return false;
     }
 
+    // دریافت کردن اطلاعات احراز هویت از هدر
     const encodedCredentials = authHeader.split(' ')[1];
     const decodedCredentials = atob(encodedCredentials);
     const [username, password] = decodedCredentials.split(':');
 
+    // بررسی نام کاربری و رمز عبور
     return username === USERNAME && password === PASSWORD;
-}
-
-// تابع تشخیص فایل ویدیو
-function isVideoFile(filename) {
-    const videoExt = ['.mp4', '.mkv', '.webm', '.avi', '.mov'];
-    const lower = filename.toLowerCase();
-    return videoExt.some(ext => lower.endsWith(ext));
 }
 
 export default {
@@ -49,17 +45,21 @@ export default {
         const url = new URL(request.url);
         const { pathname } = url;
 
+        // تنظیم CORS برای پذیرش همه درخواست‌ها
         const corsHeaders = {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
             'Access-Control-Allow-Headers': '*',
         };
 
+        // پاسخ به درخواست‌های OPTIONS
         if (request.method === 'OPTIONS') {
             return new Response(null, { headers: corsHeaders });
         }
 
+        // بررسی احراز هویت برای همه درخواست‌ها به جز فایل‌های استاتیک
         if (!pathname.endsWith('.css') && !pathname.endsWith('.js')) {
+            // بررسی احراز هویت
             if (!checkAuth(request)) {
                 return new Response('Unauthorized', {
                     status: 401,
@@ -77,6 +77,7 @@ export default {
                 return new Response('URL parameter is missing', { status: 400, headers: corsHeaders });
             }
 
+            // استفاده از کش برای درخواست‌های تکراری
             const cacheKey = originalUrl;
             if (cache.has(cacheKey)) {
                 return new Response(JSON.stringify(cache.get(cacheKey)), {
@@ -87,103 +88,71 @@ export default {
             const urlWithoutParams = originalUrl.split('?')[0];
             const filename = urlWithoutParams.split('/').pop();
 
+            // فقط از Base64 استفاده می‌کنیم بدون XOR
             const encodedData = toBase64(JSON.stringify({ url: originalUrl, filename }));
             const proxiedUrl = `${Domain}/dl/${encodedData}`;
-            
-            // فقط برای فایل‌های ویدیویی لینک پلیر ساخته میشه
-            let responseData = {
+
+            const responseData = {
                 proxiedUrl,
                 filename
             };
-            if (isVideoFile(filename)) {
-                responseData.playerUrl = `${Domain}/player/${encodedData}`;
-            }
 
+            // ذخیره نتیجه در کش
             cache.set(cacheKey, responseData);
 
             return new Response(JSON.stringify(responseData), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
-        }
-
-        else if (pathname.startsWith('/player/')) {
-            const base64Data = pathname.replace('/player/', '');
-
-            if (!base64Data) {
-                return new Response('Data parameter is missing', { status: 400, headers: corsHeaders });
-            }
-
-            try {
-                const decodedData = fromBase64(base64Data);
-                const { filename } = JSON.parse(decodedData);
-                const videoUrl = `${Domain}/dl/${base64Data}`;
-
-                const html = `
-                    <!DOCTYPE html>
-                    <html lang="en">
-                    <head>
-                        <meta charset="UTF-8">
-                        <title>${filename}</title>
-                        <style>
-                            body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #000; }
-                            video { max-width: 100%; max-height: 100%; }
-                        </style>
-                    </head>
-                    <body>
-                        <video controls autoplay>
-                            <source src="${videoUrl}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </body>
-                    </html>
-                `;
-
-                return new Response(html, {
-                    headers: { ...corsHeaders, 'Content-Type': 'text/html' }
-                });
-
-            } catch (error) {
-                return new Response(`Error: ${error.message}`, { status: 400, headers: corsHeaders });
-            }
-        }
-
-        else if (pathname.startsWith('/dl/')) {
+        } else if (pathname.startsWith('/dl/')) {
+            // گرفتن دیتای Base64 از URL
             const base64Data = pathname.replace('/dl/', '');
+
             if (!base64Data) {
                 return new Response('Data parameter is missing', { status: 400, headers: corsHeaders });
             }
 
             try {
+                // دیکد کردن دیتا (فقط با Base64)
                 const decodedData = fromBase64(base64Data);
                 const { url: decodedUrl, filename } = JSON.parse(decodedData);
 
+                // بررسی هدر Range
                 const range = request.headers.get('Range');
                 let fetchHeaders = new Headers(request.headers);
 
-                const headResponse = await fetch(decodedUrl, { method: 'HEAD' });
+                // درخواست HEAD برای گرفتن اطلاعات فایل بدون دانلود محتوا
+                const headResponse = await fetch(decodedUrl, {
+                    method: 'HEAD',
+                });
+
                 if (!headResponse.ok) {
                     throw new Error(`Failed to get file information: ${headResponse.status}`);
                 }
 
+                // دریافت حجم فایل از هدر Content-Length
                 const contentLength = headResponse.headers.get('Content-Length');
                 if (!contentLength) {
                     throw new Error('Could not determine file size');
                 }
 
+                // تنظیم هدرهای پاسخ
                 const responseHeaders = new Headers();
                 responseHeaders.set('Content-Disposition', `attachment; filename="${filename}"`);
                 responseHeaders.set('Accept-Ranges', 'bytes');
                 responseHeaders.set('Content-Length', contentLength);
 
+                // اضافه کردن هدرهای CORS
                 Object.keys(corsHeaders).forEach(key => {
                     responseHeaders.set(key, corsHeaders[key]);
                 });
 
+                // پردازش Range Requests
                 if (range) {
                     const parts = range.replace(/bytes=/, "").split("-");
                     const start = parseInt(parts[0], 10);
                     const end = parts[1] ? parseInt(parts[1], 10) : parseInt(contentLength) - 1;
 
+                    // بررسی معتبر بودن محدوده
                     if (isNaN(start) || isNaN(end) || start < 0 || end >= parseInt(contentLength) || start > end) {
                         responseHeaders.set('Content-Range', `bytes */${contentLength}`);
                         return new Response('Invalid range', { 
@@ -194,15 +163,21 @@ export default {
 
                     const chunkSize = (end - start) + 1;
 
+                    // تنظیم هدرهای Range
                     fetchHeaders.set('Range', `bytes=${start}-${end}`);
                     responseHeaders.set('Content-Range', `bytes ${start}-${end}/${contentLength}`);
                     responseHeaders.set('Content-Length', chunkSize.toString());
 
-                    const rangeResponse = await fetch(decodedUrl, { headers: fetchHeaders });
+                    // ارسال درخواست با Range مشخص شده
+                    const rangeResponse = await fetch(decodedUrl, {
+                        headers: fetchHeaders
+                    });
+
                     if (!rangeResponse.ok && rangeResponse.status !== 206) {
                         throw new Error(`Failed to fetch range: ${rangeResponse.status}`);
                     }
 
+                    // استفاده از TransformStream برای بهبود انتقال داده
                     const { readable, writable } = new TransformStream();
                     rangeResponse.body.pipeTo(writable).catch(err => console.error('Stream error:', err));
 
@@ -211,11 +186,16 @@ export default {
                         headers: responseHeaders
                     });
                 } else {
-                    const response = await fetch(decodedUrl, { headers: fetchHeaders });
+                    // دانلود کامل فایل
+                    const response = await fetch(decodedUrl, {
+                        headers: fetchHeaders
+                    });
+
                     if (!response.ok) {
                         throw new Error(`Failed to fetch file: ${response.status}`);
                     }
 
+                    // استفاده از TransformStream برای بهبود انتقال داده
                     const { readable, writable } = new TransformStream();
                     response.body.pipeTo(writable).catch(err => console.error('Stream error:', err));
 
@@ -230,9 +210,8 @@ export default {
                     headers: corsHeaders 
                 });
             }
-        }
-
-        else {
+        } else {
+            // برای سایر مسیرها، هدرهای CORS را اضافه کنید
             const response = await env.ASSETS.fetch(request);
             const newHeaders = new Headers(response.headers);
             Object.keys(corsHeaders).forEach(key => {
