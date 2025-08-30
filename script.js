@@ -126,7 +126,7 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
 
         // Add event listener for Copy All button
         document.getElementById('copyAllBtn').addEventListener('click', function() {
-            copyToClipboard(allProxiedUrls.join('\n'), this, 'All links copied to clipboard!');
+            copyToClipboard(allProxiedUrls.join('\n'), this, 'همه لینک ها در کلیپ بورد کپی شدند!');
         });
 
         // Add event listener for Download All button
