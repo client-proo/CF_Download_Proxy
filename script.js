@@ -151,7 +151,7 @@ async function cachedFetch(url) {
 }
 
 // Function to copy text to clipboard
-function copyToClipboard(text, buttonElement, message = 'Copied!') {
+function copyToClipboard(text, buttonElement, message = 'کپی شد!') {
     navigator.clipboard.writeText(text).then(function() {
         // Show success message on button
         const originalText = buttonElement.textContent;
