@@ -92,10 +92,10 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
             resultDiv.innerHTML = `
                 <div class="url-original">${trimmedUrl}</div>
                 <div class="url-proxied">${data.proxiedUrl}</div>
-                <div class="filename">Filename: ${data.filename}</div>
+                <div class="filename">نام فایل: ${data.filename}</div>
                 <div class="action-buttons">
-                    <a class="download-btn" href="${data.proxiedUrl}" target="_blank">Download</a>
-                    <button class="copy-btn" data-url="${data.proxiedUrl}">Copy Link</button>
+                    <a class="download-btn" href="${data.proxiedUrl}" target="_blank">دانلود</a>
+                    <button class="copy-btn" data-url="${data.proxiedUrl}">کپی لینک</button>
                 </div>
             `;
             
