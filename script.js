@@ -96,7 +96,7 @@ for (const url of urls) {
             <div class="action-buttons">  
     <a class="download-btn" href="${data.proxiedUrl}" target="_blank">دانلود</a>  
     <a class="download-btn" href="${data.playerUrl}" target="_blank">پخش آنلاین 🎥</a>
-    <button class="copy-btn" data-url="${data.proxiedUrl}">کپی لینک</button>  
+    <button class="player-btn" data-url="${data.proxiedUrl}">کپی لینک</button>  
 </div>  
         `;  
 
