@@ -94,10 +94,9 @@ for (const url of urls) {
             <div class="url-proxied">${data.proxiedUrl}</div>  
             <div class="filename">نام فایل: ${data.filename}</div>  
             <div class="action-buttons">  
-    <a class="download-btn" href="${data.proxiedUrl}" target="_blank">دانلود</a>  
-    <a class="player-btn" href="${data.playerUrl}" target="_blank">پخش آنلاین 🎥</a>
-    <button class="player-btn" data-url="${data.proxiedUrl}">کپی لینک</button>  
-</div>  
+                <a class="download-btn" href="${data.proxiedUrl}" target="_blank">دانلود</a>  
+                <button class="copy-btn" data-url="${data.proxiedUrl}">کپی لینک</button>  
+            </div>  
         `;  
 
         // Add event listener to the copy button  
