@@ -96,9 +96,134 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
             // اگر فایل ویدیویی باشد، دکمه پخش آنلاین اضافه می‌شود
             if (data.playerUrl) {
                 actionButtons += `
-                    <a class="play-btn" href="${data.playerUrl}" target="_blank">پخش آنلاینZurück
+                    <a class="play-btn" href="${data.playerUrl}" target="_blank">پخش آنلاین</a>
+                `;
+            }
+            actionButtons += `</div>`;
 
-                    آنلاین</a>
+            resultDiv.innerHTML = `
+                <div class="url-original">${trimmedUrl}</div>
+                <div class="url-proxied">${data.proxiedUrl}</div>
+                <div class="filename">نام فایل: ${data.filename}</div>
+                ${actionButtons}
+            `;
+
+            // Add event listener to the copy button
+            resultDiv.querySelector('.copy-btn').addEventListener('click', function() {
+                const urlToCopy = this.getAttribute('data-url');
+                copyToClipboard(urlToCopy, this);
+            });
+
+        } catch (error) {
+            // Handle error
+            const resultDiv =……
+
+System: I'm sorry, it looks like your message got cut off. You requested the complete JavaScript code with the "Play Online" button added, and you mentioned that the button wasn't appearing. I've reviewed the code, and the logic for adding the "Play Online" button is correct, but there could be issues like the server not returning `playerUrl` or problems with HTML rendering. Below, I'll provide the **complete JavaScript code** again, ensuring the "Play Online" button is included for video files (when `data.playerUrl` exists). I'll also include some debugging tips to help figure out why the button might not be appearing.
+
+### Complete JavaScript Code
+```javascript
+document.getElementById('proxyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Get all URLs (one per line)
+    const urlsText = document.getElementById('urlInput').value;
+    const urls = urlsText.split('\n').filter(url => url.trim() !== '');
+
+    // Clear previous results
+    const resultsContainer = document.getElementById('results');
+    resultsContainer.innerHTML = '';
+
+    // Hide bulk actions until we have results
+    document.getElementById('bulkActionsContainer').style.display = 'none';
+
+    // Track all successful proxied URLs and their filenames
+    const allProxiedUrls = [];
+    const allFilenames = [];
+
+    // Limit concurrent requests
+    const maxConcurrentRequests = 3;
+    let activeFetches = 0;
+    const fetchQueue = [];
+
+    async function queuedFetch(url) {
+        if (activeFetches >= maxConcurrentRequests) {
+            return new Promise(resolve => {
+                fetchQueue.push(() => {
+                    activeFetches++;
+                    return fetch(url)
+                        .then(response => {
+                            activeFetches--;
+                            processQueue();
+                            return resolve(response);
+                        })
+                        .catch(error => {
+                            activeFetches--;
+                            processQueue();
+                            throw error;
+                        });
+                });
+            });
+        }
+
+        activeFetches++;
+        return fetch(url)
+            .then(response => {
+                activeFetches--;
+                processQueue();
+                return response;
+            })
+            .catch(error => {
+                activeFetches--;
+                processQueue();
+                throw error;
+            });
+    }
+
+    function processQueue() {
+        if (fetchQueue.length > 0 && activeFetches < maxConcurrentRequests) {
+            const nextFetch = fetchQueue.shift();
+            nextFetch();
+        }
+    }
+
+    // Process each URL
+    for (const url of urls) {
+        const trimmedUrl = url.trim();
+        if (!trimmedUrl) continue;
+
+        try {
+            // Create a result container for this URL
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result-item';
+            resultsContainer.appendChild(resultDiv);
+
+            // Show loading state
+            resultDiv.innerHTML = `
+                <div class="url-original">${trimmedUrl}</div>
+                <div class="loading">Processing...</div>
+            `;
+
+            // Fetch the proxied URL using our queue system
+            const response = await queuedFetch(`/proxy?url=${encodeURIComponent(trimmedUrl)}`);
+            const data = await response.json();
+
+            // Debugging: Log the response data to check if playerUrl exists
+            console.log('Response data for URL:', trimmedUrl, data);
+
+            // Add to our collections
+            allProxiedUrls.push(data.proxiedUrl);
+            allFilenames.push(data.filename);
+
+            // Update the result container with the proxied URL
+            let actionButtons = `
+                <div class="action-buttons">
+                    <a class="download-btn" href="${data.proxiedUrl}" target="_blank">دانلود</a>
+                    <button class="copy-btn" data-url="${data.proxiedUrl}">کپی لینک</button>
+            `;
+            // Add Play Online button if the file is a video (playerUrl exists)
+            if (data.playerUrl) {
+                actionButtons += `
+                    <a class="play-btn" href="${data.playerUrl}" target="_blank">پخش آنلاین</a>
                 `;
             }
             actionButtons += `</div>`;
@@ -147,7 +272,7 @@ document.getElementById('proxyForm').addEventListener('submit', async (e) => {
     }
 });
 
-// کش برای نگهداری درخواست‌های تکراری
+// Cache for storing repeated requests
 const cache = new Map();
 
 async function cachedFetch(url) {
