@@ -1,4 +1,4 @@
-// دامنه ورکرتون یا نیم بهارو اینجا بزارید 
+// دامنه ورکرتون یا نیم بههارو اینجا بزارید 
 const Domain = 'https://nimbaha.363178.ir.cdn.ir'; 
 
 // تنظیمات احراز هویت HTTP
@@ -89,7 +89,7 @@ export default {
 
             const encodedData = toBase64(JSON.stringify({ url: originalUrl, filename }));
             const proxiedUrl = `${Domain}/dl/${encodedData}`;
-            
+
             // فقط برای فایل‌های ویدیویی لینک پلیر ساخته میشه
             let responseData = {
                 proxiedUrl,
@@ -123,17 +123,31 @@ export default {
                     <html lang="en">
                     <head>
                         <meta charset="UTF-8">
-                        <title>${filename}</title>
+                        <meta property="og:image" content="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/FileToLink/live.png">
+                        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Playing: ${filename}</title>
                         <style>
-                            body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #000; }
-                            video { max-width: 100%; max-height: 100%; }
+                            body { font-family: Arial, sans-serif; text-align: center; padding: 40px; color: #333; margin: 0; background: #f9f9f9; }
+                            .container { max-width: 600px; margin: auto; }
+                            p { margin-bottom: 20px; font-size: 1em; }
+                            a { color: #0066cc; text-decoration: none; font-weight: bold; }
+                            a:hover { text-decoration: underline; }
+                            .message { padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #fff; }
+                            video { width: 100%; height: auto; margin-top: 20px; }
                         </style>
                     </head>
                     <body>
-                        <video controls autoplay>
-                            <source src="${videoUrl}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
+                        <div class="container">
+                            <div class="message">
+                                <p>Your video <strong>${filename}</strong> should start playing automatically.</p>
+                                <p>If it doesn't, please <a href="${videoUrl}">click here to play</a>.</p>
+                                <video controls autoplay>
+                                    <source src="${videoUrl}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        </div>
                     </body>
                     </html>
                 `;
