@@ -96,7 +96,7 @@ export default {
                 filename
             };
             if (isVideoFile(filename)) {
-                responseData.playerUrl = `${Domain}/watch/${encodedData}`;
+                responseData.playerUrl = `${Domain}/stream/${encodedData}`;
             }
 
             cache.set(cacheKey, responseData);
@@ -106,8 +106,8 @@ export default {
             });
         }
 
-        else if (pathname.startsWith('/watch/')) {
-            const base64Data = pathname.replace('/watch/', '');
+        else if (pathname.startsWith('/stream/')) {
+            const base64Data = pathname.replace('/stream/', '');
 
             if (!base64Data) {
                 return new Response('Data parameter is missing', { status: 400, headers: corsHeaders });
