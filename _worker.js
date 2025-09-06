@@ -122,15 +122,14 @@ export default {
                     <head>
                         <meta charset="UTF-8">
                         <title>${filename}</title>
-                        <style>
-                            body { font-family: Arial, sans-serif; text-align: center; padding: 40px; color: #333; margin: 0; background-color: #f0f0f0; }
-                            .container { max-width: 800px; margin: auto; }
-                            p { margin-bottom: 20px; font-size: 1em; }
-                            a { color: #0066cc; text-decoration: none; font-weight: bold; }
-                            a:hover { text-decoration: underline; }
-                            .message { padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
-                            video { width: 100%; max-height: 80vh; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-                        </style>
+                            <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 40px; color: #333; margin: 0; }
+        .container { max-width: 600px; margin: auto; }
+        p { margin-bottom: 20px; font-size: 1em; }
+        a { color: #0066cc; text-decoration: none; font-weight: bold; }
+        a:hover { text-decoration: underline; }
+        .message { padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
+    </style>
                     </head>
                     <body>
                         <div class="container">
