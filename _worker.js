@@ -115,10 +115,25 @@ export default {
 
             try {
                 const decodedData = fromBase64(base64Data);
-                const { filename } = JSON.parse(decodedData);
+                const { url: originalUrl, filename } = JSON.parse(decodedData);
                 const videoUrl = `${Domain}/dl/${base64Data}`;
 
-                const html = `
+                // محاسبه اندازه فایل (اختیاری اما مفید برای نمایش)
+                let fileSize = 'Unknown';
+                try {
+                    const headResponse = await fetch(originalUrl, { method: 'HEAD' });
+                    if (headResponse.ok) {
+                        const contentLength = headResponse.headers.get('Content-Length');
+                        if (contentLength) {
+                            const sizeInMB = (parseInt(contentLength) / (1024 * 1024)).toFixed(2);
+                            fileSize = `${sizeInMB} MB`;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Failed to get file size:', err);
+                }
+
+                const htmlTemplate = `
                     <!DOCTYPE html>
 <html lang="en">
 
@@ -313,6 +328,12 @@ export default {
 
 </html>
                 `;
+
+                // جایگزینی placeholderها با مقادیر واقعی
+                let html = htmlTemplate
+                    .replaceAll('{{file_url}}', videoUrl)
+                    .replaceAll('{{file_name}}', filename)
+                    .replaceAll('{{file_size}}', fileSize);
 
                 return new Response(html, {
                     headers: { ...corsHeaders, 'Content-Type': 'text/html' }
