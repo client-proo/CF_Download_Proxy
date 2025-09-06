@@ -134,8 +134,9 @@ export default {
                 }
 
                 const htmlTemplate = `
-<!DOCTYPE html>
+                    <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -147,9 +148,15 @@ export default {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/proavipatil/data@main/fs/src/plyr.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@500;700&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@500;700&display=swap"
+        rel="stylesheet"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
         footer .icons {
             gap: 8px !important;
@@ -165,31 +172,14 @@ export default {
         }
 
         .downloadBtn img {
-            width: 30px !important;
-            height: 30px !important;
-            object-fit: contain;
-            vertical-align: middle;
-        }
-
-        .main {
-            margin-bottom: 20px;
-        }
-
-        .abt-sec {
-            padding: 20px 30px !important;
-        }
-
-        .file-name {
-            margin-top: 10px;
-            margin-bottom: 20px;
-        }
-
-        .copyright {
-            margin-top: 10px !important;
-            margin-bottom: 10px !important;
+            width: 30px !important; /* عرض ثابت برای همه آیکون‌ها */
+            height: 30px !important; /* ارتفاع ثابت برای همه آیکون‌ها */
+            object-fit: contain; /* حفظ تناسب تصویر */
+            vertical-align: middle; /* تراز عمودی با متن */
         }
     </style>
 </head>
+
 <body>
     <nav>
         <div class="nleft">
@@ -230,19 +220,19 @@ export default {
                     <p style="display: inline;">{{file_size}}</p>
                 </div>
                 <div class="downloadBtn">
-                    <button class="magnet" onclick="downloadFile('{{file_url}}')">
+                    <button class="magnet" onclick="streamDownload()">
                         <img src="https://i.ibb.co/rRHN89YS/dl.png" alt="download video" />download video
                     </button>
-                    <button class="magnet" onclick="copyLink('{{file_url}}')">
+                    <button class="magnet" onclick="copyStreamLink()">
                         <img src="https://i.ibb.co/YTqX5QWk/link.png" alt="Copy Link" />copy link
                     </button>
-                    <button class="magnet" onclick="openInPlayer('{{file_url}}', 'vlc')">
+                    <button class="magnet" onclick="vlc_player()">
                         <img src="https://i.ibb.co/JjqHGGhV/vlc.png" alt="watch in VLC PLAYER" />watch in VLC PLAYER
                     </button>
-                    <button class="magnet" onclick="openInPlayer('{{file_url}}', 'mx')">
+                    <button class="magnet" onclick="mx_player()">
                         <img src="https://i.ibb.co/41WvtQ3/mx.png" alt="watch in MX PLAYER" />watch in MX PLAYER
                     </button>
-                    <button class="magnet" onclick="openInPlayer('{{file_url}}', 'km')">
+                    <button class="magnet" onclick="km_player()">
                         <img src="https://i.ibb.co/Cs9HcGXL/KMPlayer.png" alt="watch in KM Player" />watch in KM Player
                     </button>
                 </div>
@@ -250,41 +240,64 @@ export default {
             <div class="abt">
                 <div class="about">
                     <div class="about-dets">
-                        <div class="abt-sec" id="abtus">
+                        <div class="abt-sec" id="abtus" style="padding: 160px 30px;">
                             <h1 style="text-align: center;">
                                 WELCOME TO OUR <span>FILE STREAM</span> BOT
                             </h1>
-                            <p style="text-align: center; line-height: 2; word-spacing: 2px; letter-spacing: 0.8px;">
+                            <p
+                                style="
+                                    text-align: center;
+                                    line-height: 2;
+                                    word-spacing: 2px;
+                                    letter-spacing: 0.8px;
+                                "
+                            >
                                 This is a Telegram Bot to Stream
                                 <span>Movies</span> and <span>Series</span> directly on Telegram.
                                 You can also <span>download</span> them if you want. This bot is
                                 developed by
-                                <a href="https://t.me/mahdi79230"><span style="font-weight: 700;">☬ 𐎶𐏃𐎭𐎴 ☬</span></a><br /><br />
+                                <a href="https://t.me/mahdi79230"
+                                    ><span style="font-weight: 700;">☬ 𐎶𐏃𐎭𐎴 ☬</span></a
+                                ><br /><br />
                                 If you like this bot, then don't forget to share it with your friends
                                 and family.
                             </p>
                         </div>
+
                         <div class="abt-sec" id="channels">
-                            <h1>JOIN OUR <span>TELEGRAM</span> CHANNELS</h1>
+                            <h1>
+                                JOIN OUR <span>TELEGRAM</span> CHANNELS
+                            </h1>
                             <div class="links chnl-link">
-                                <a class="magnet" href="https://t.me/LinkBoltChannel"><button>LinkBolt channel</button></a>
-                                <a class="magnet" href="https://t.me/ISVvpn"><button>ISVvpn</button></a>
+                                <a class="magnet" href="https://t.me/LinkBoltChannel">
+                                    <button>LinkBolt channel</button>
+                                </a>
+                                <a class="magnet" href="https://t.me/ISVvpn">
+                                    <button>ISVvpn</button>
+                                </a>
                             </div>
                         </div>
+
                         <div class="abt-sec" id="contact">
                             <p style="text-align: center;">Report Bugs and Contact us on Telegram Below</p>
                             <div class="links contact">
-                                <a href="https://t.me/mahdi79230"><button>CONTACT</button></a>
+                                <a href="https://t.me/mahdi79230">
+                                    <button>CONTACT</button>
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
         <footer>
             <center>
-                <div class="copyright" style="text-align: center;">
-                    <div class="icons">
+                <div class="copyright" style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
+                    <div
+                        class="icons"
+                        style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; margin-top: 0;"
+                    >
                         <a href="https://t.me/LinkBoltChannel" target="_blank" style="margin: 0;">
                             <i class="fa-brands fa-telegram fa-lg"></i>
                         </a>
@@ -294,42 +307,27 @@ export default {
                     </div>
                     <h5 class="text-center" style="margin: 0;">
                         Copyright © 2025
-                        <a href="https://t.me/LinkBoltChannel"><span style="font-weight: 700;">LinkBolt</span></a>
+                        <a href="https://t.me/LinkBoltChannel">
+                            <span style="font-weight: 700;">LinkBolt</span>
+                        </a>
                         . All Rights Reserved.
                     </h5>
                 </div>
             </center>
         </footer>
     </div>
-    <script>
-        function downloadFile(url) {
-            window.location.href = url;
-        }
-
-        function copyLink(url) {
-            navigator.clipboard.writeText(url).then(() => {
-                alert('Download link copied to clipboard!');
-            }).catch(err => {
-                console.error('Failed to copy link:', err);
-                alert('Failed to copy link.');
-            });
-        }
-
-        function openInPlayer(url, player) {
-            let playerUrl;
-            if (player === 'vlc') {
-                playerUrl = 'vlc://' + url;
-            } else if (player === 'mx') {
-                playerUrl = 'intent:' + url + '#Intent;package=com.mxtech.videoplayer.ad;end';
-            } else if (player === 'km') {
-                playerUrl = 'kmplayer://' + url;
-            }
-            window.location.href = playerUrl;
-        }
-    </script>
 </body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.155.0/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/automat/controlkit.js@master/bin/controlKit.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sheryjs/dist/Shery.js"></script>
+<script src="https://cdn.plyr.io/3.6.9/plyr.js"></script>
+<script src="https://proavipatil.github.io/data/fs/src/script.js"></script>
+
 </html>
-`;
+                `;
 
                 // جایگزینی placeholderها با مقادیر واقعی
                 let html = htmlTemplate
@@ -340,6 +338,7 @@ export default {
                 return new Response(html, {
                     headers: { ...corsHeaders, 'Content-Type': 'text/html' }
                 });
+
             } catch (error) {
                 return new Response(`Error: ${error.message}`, { status: 400, headers: corsHeaders });
             }
