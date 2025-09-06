@@ -115,225 +115,38 @@ export default {
 
             try {
                 const decodedData = fromBase64(base64Data);
-                const { url: originalUrl, filename } = JSON.parse(decodedData);
+                const { filename } = JSON.parse(decodedData);
                 const videoUrl = `${Domain}/dl/${base64Data}`;
 
-                // محاسبه اندازه فایل (اختیاری اما مفید برای نمایش)
-                let fileSize = 'Unknown';
-                try {
-                    const headResponse = await fetch(originalUrl, { method: 'HEAD' });
-                    if (headResponse.ok) {
-                        const contentLength = headResponse.headers.get('Content-Length');
-                        if (contentLength) {
-                            const sizeInMB = (parseInt(contentLength) / (1024 * 1024)).toFixed(2);
-                            fileSize = `${sizeInMB} MB`;
-                        }
-                    }
-                } catch (err) {
-                    console.error('Failed to get file size:', err);
-                }
-
-                const htmlTemplate = `
+                const html = `
                     <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>LinkBolt Bot | {{file_name}}</title>
-    <link rel="icon" href="https://i.ibb.co/pvMy0Np6/icon.png" type="image/x-icon" />
-    <link rel="shortcut icon" href="https://i.ibb.co/pvMy0Np6/icon.png" type="image/x-icon" />
-    <link rel="stylesheet" href="https://unpkg.com/sheryjs/dist/Shery.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/proavipatil/data@main/fs/src/style.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/proavipatil/data@main/fs/src/plyr.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@500;700&display=swap"
-        rel="stylesheet"
-    />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <meta charset="UTF-8">
+    <meta property="og:image" content="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/FileToLink/live.png">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Downloading: {{ file_name }}</title>
+    <meta http-equiv="refresh" content="0;url={{ src }}">
     <style>
-        footer .icons {
-            gap: 8px !important;
-            margin-bottom: 4px !important;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        footer h5 {
-            margin-top: 4px !important;
-            font-family: 'Josefin Sans', sans-serif;
-        }
-
-        .downloadBtn img {
-            width: 30px !important; /* عرض ثابت برای همه آیکون‌ها */
-            height: 30px !important; /* ارتفاع ثابت برای همه آیکون‌ها */
-            object-fit: contain; /* حفظ تناسب تصویر */
-            vertical-align: middle; /* تراز عمودی با متن */
-        }
+        body { font-family: Arial, sans-serif; text-align: center; padding: 40px; color: #333; margin: 0; }
+        .container { max-width: 600px; margin: auto; }
+        p { margin-bottom: 20px; font-size: 1em; }
+        a { color: #0066cc; text-decoration: none; font-weight: bold; }
+        a:hover { text-decoration: underline; }
+        .message { padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
     </style>
 </head>
-
 <body>
-    <nav>
-        <div class="nleft">
-            <a href="#">
-                <h3 id="heading" style="z-index: 100;" class="magnet title">LinkBolt</h3>
-            </a>
+    <div class="container">
+        <div class="message">
+            <p>Your download for <strong>{{ file_name }}</strong> should start automatically.</p>
+            <p>If it doesn't, please <a href="{{ src }}" download="{{ file_name }}">click here to download</a>.</p>
         </div>
-        <div class="nryt">
-            <a class="home-btn magnet" href="#main" onclick="toggleWidthnav(this)">HOME</a>
-            <a href="#abtus" class="about-btn magnet" onclick="toggleWidthnav(this)">ABOUT</a>
-        </div>
-    </nav>
-    <center>
-        <div class="about-nav">
-            <a href="#abtus" class="wlcm magnet" onclick="toggleWidth(this)">WELCOME</a>
-            <a href="#channels" class="abt-chnl magnet" onclick="toggleWidth(this)">CHANNELS</a>
-            <a href="#contact" class="magnet contact-btn" onclick="toggleWidth(this)">CONTACT</a>
-        </div>
-    </center>
-
-    <div class="outer">
-        <div class="inner">
-            <div class="main" id="main">
-                <video
-                    id="player"
-                    class="player"
-                    src="{{file_url}}"
-                    type="video/mp4"
-                    playsinline
-                    controls
-                    width="100%"
-                ></video>
-                <div class="player"></div>
-                <div class="file-name">
-                    <h4 style="display: inline;">File Name: </h4>
-                    <p style="display: inline;" id="myDiv">{{file_name}}</p><br />
-                    <h4 style="display: inline;">File Size: </h4>
-                    <p style="display: inline;">{{file_size}}</p>
-                </div>
-                <div class="downloadBtn">
-                    <button class="magnet" onclick="streamDownload()">
-                        <img src="https://i.ibb.co/rRHN89YS/dl.png" alt="download video" />download video
-                    </button>
-                    <button class="magnet" onclick="copyStreamLink()">
-                        <img src="https://i.ibb.co/YTqX5QWk/link.png" alt="Copy Link" />copy link
-                    </button>
-                    <button class="magnet" onclick="vlc_player()">
-                        <img src="https://i.ibb.co/JjqHGGhV/vlc.png" alt="watch in VLC PLAYER" />watch in VLC PLAYER
-                    </button>
-                    <button class="magnet" onclick="mx_player()">
-                        <img src="https://i.ibb.co/41WvtQ3/mx.png" alt="watch in MX PLAYER" />watch in MX PLAYER
-                    </button>
-                    <button class="magnet" onclick="km_player()">
-                        <img src="https://i.ibb.co/Cs9HcGXL/KMPlayer.png" alt="watch in KM Player" />watch in KM Player
-                    </button>
-                </div>
-            </div>
-            <div class="abt">
-                <div class="about">
-                    <div class="about-dets">
-                        <div class="abt-sec" id="abtus" style="padding: 160px 30px;">
-                            <h1 style="text-align: center;">
-                                WELCOME TO OUR <span>FILE STREAM</span> BOT
-                            </h1>
-                            <p
-                                style="
-                                    text-align: center;
-                                    line-height: 2;
-                                    word-spacing: 2px;
-                                    letter-spacing: 0.8px;
-                                "
-                            >
-                                This is a Telegram Bot to Stream
-                                <span>Movies</span> and <span>Series</span> directly on Telegram.
-                                You can also <span>download</span> them if you want. This bot is
-                                developed by
-                                <a href="https://t.me/mahdi79230"
-                                    ><span style="font-weight: 700;">☬ 𐎶𐏃𐎭𐎴 ☬</span></a
-                                ><br /><br />
-                                If you like this bot, then don't forget to share it with your friends
-                                and family.
-                            </p>
-                        </div>
-
-                        <div class="abt-sec" id="channels">
-                            <h1>
-                                JOIN OUR <span>TELEGRAM</span> CHANNELS
-                            </h1>
-                            <div class="links chnl-link">
-                                <a class="magnet" href="https://t.me/LinkBoltChannel">
-                                    <button>LinkBolt channel</button>
-                                </a>
-                                <a class="magnet" href="https://t.me/ISVvpn">
-                                    <button>ISVvpn</button>
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="abt-sec" id="contact">
-                            <p style="text-align: center;">Report Bugs and Contact us on Telegram Below</p>
-                            <div class="links contact">
-                                <a href="https://t.me/mahdi79230">
-                                    <button>CONTACT</button>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <footer>
-            <center>
-                <div class="copyright" style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
-                    <div
-                        class="icons"
-                        style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; margin-top: 0;"
-                    >
-                        <a href="https://t.me/LinkBoltChannel" target="_blank" style="margin: 0;">
-                            <i class="fa-brands fa-telegram fa-lg"></i>
-                        </a>
-                        <a href="https://www.instagram.com/mehdi_asgariii79" target="_blank" style="margin: 0;">
-                            <i class="fa-brands fa-square-instagram fa-lg"></i>
-                        </a>
-                    </div>
-                    <h5 class="text-center" style="margin: 0;">
-                        Copyright © 2025
-                        <a href="https://t.me/LinkBoltChannel">
-                            <span style="font-weight: 700;">LinkBolt</span>
-                        </a>
-                        . All Rights Reserved.
-                    </h5>
-                </div>
-            </center>
-        </footer>
     </div>
 </body>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.155.0/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/automat/controlkit.js@master/bin/controlKit.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sheryjs/dist/Shery.js"></script>
-<script src="https://cdn.plyr.io/3.6.9/plyr.js"></script>
-<script src="https://proavipatil.github.io/data/fs/src/script.js"></script>
-
 </html>
                 `;
-
-                // جایگزینی placeholderها با مقادیر واقعی
-                let html = htmlTemplate
-                    .replaceAll('{{file_url}}', videoUrl)
-                    .replaceAll('{{file_name}}', filename)
-                    .replaceAll('{{file_size}}', fileSize);
 
                 return new Response(html, {
                     headers: { ...corsHeaders, 'Content-Type': 'text/html' }
