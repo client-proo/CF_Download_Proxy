@@ -219,23 +219,6 @@ export default {
                     <h4 style="display: inline;">File Size: </h4>
                     <p style="display: inline;">{{file_size}}</p>
                 </div>
-                <div class="downloadBtn">
-                    <button class="magnet" onclick="streamDownload()">
-                        <img src="https://i.ibb.co/rRHN89YS/dl.png" alt="download video" />download video
-                    </button>
-                    <button class="magnet" onclick="copyStreamLink()">
-                        <img src="https://i.ibb.co/YTqX5QWk/link.png" alt="Copy Link" />copy link
-                    </button>
-                    <button class="magnet" onclick="vlc_player()">
-                        <img src="https://i.ibb.co/JjqHGGhV/vlc.png" alt="watch in VLC PLAYER" />watch in VLC PLAYER
-                    </button>
-                    <button class="magnet" onclick="mx_player()">
-                        <img src="https://i.ibb.co/41WvtQ3/mx.png" alt="watch in MX PLAYER" />watch in MX PLAYER
-                    </button>
-                    <button class="magnet" onclick="km_player()">
-                        <img src="https://i.ibb.co/Cs9HcGXL/KMPlayer.png" alt="watch in KM Player" />watch in KM Player
-                    </button>
-                </div>
             </div>
             <div class="abt">
                 <div class="about">
