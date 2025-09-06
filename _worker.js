@@ -1,10 +1,10 @@
-// دامنه ورکرتون یا نیم بههارو اینجا بزارید 
-const Domain = 'https://nimbaha.363178.ir.cdn.ir'; 
+// دامنه ورکرتون یا نیم بهارو اینجا بزارید
+const Domain = 'https://nimbaha.363178.ir.cdn.ir';
 
 // تنظیمات احراز هویت HTTP
 const AUTH_ENABLED = false; // تغییر به true یا false برای فعال/غیرفعال کردن احراز هویت
-const USERNAME = 'admin';  // نام کاربری را اینجا تغییر دهید
-const PASSWORD = 'proxy123'; // رمز عبور را اینجا تغییر دهید
+const USERNAME = 'admin';
+const PASSWORD = 'proxy123';
 
 // کش برای ذخیره نتایج درخواست‌های تکراری
 const cache = new Map();
@@ -21,7 +21,6 @@ function fromBase64(b64) {
     }
 }
 
-// تابع بررسی احراز هویت HTTP Basic
 function checkAuth(request) {
     if (!AUTH_ENABLED) return true;
 
@@ -37,7 +36,6 @@ function checkAuth(request) {
     return username === USERNAME && password === PASSWORD;
 }
 
-// تابع تشخیص فایل ویدیو
 function isVideoFile(filename) {
     const videoExt = ['.mp4', '.mkv', '.webm', '.avi', '.mov'];
     const lower = filename.toLowerCase();
@@ -90,11 +88,11 @@ export default {
             const encodedData = toBase64(JSON.stringify({ url: originalUrl, filename }));
             const proxiedUrl = `${Domain}/dl/${encodedData}`;
 
-            // فقط برای فایل‌های ویدیویی لینک پلیر ساخته میشه
             let responseData = {
                 proxiedUrl,
                 filename
             };
+
             if (isVideoFile(filename)) {
                 responseData.playerUrl = `${Domain}/stream/${encodedData}`;
             }
@@ -120,33 +118,27 @@ export default {
 
                 const html = `
                     <!DOCTYPE html>
-                    <html lang="en">
+                    <html lang="fa">
                     <head>
                         <meta charset="UTF-8">
-                        <meta property="og:image" content="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/FileToLink/live.png">
-                        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>Playing: ${filename}</title>
+                        <title>${filename}</title>
                         <style>
-                            body { font-family: Arial, sans-serif; text-align: center; padding: 40px; color: #333; margin: 0; background: #f9f9f9; }
-                            .container { max-width: 600px; margin: auto; }
+                            body { font-family: Arial, sans-serif; text-align: center; padding: 40px; color: #333; margin: 0; background-color: #f0f0f0; }
+                            .container { max-width: 800px; margin: auto; }
                             p { margin-bottom: 20px; font-size: 1em; }
                             a { color: #0066cc; text-decoration: none; font-weight: bold; }
                             a:hover { text-decoration: underline; }
-                            .message { padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #fff; }
-                            video { width: 100%; height: auto; margin-top: 20px; }
+                            .message { padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
+                            video { width: 100%; max-height: 80vh; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
                         </style>
                     </head>
                     <body>
                         <div class="container">
-                            <div class="message">
-                                <p>Your video <strong>${filename}</strong> should start playing automatically.</p>
-                                <p>If it doesn't, please <a href="${videoUrl}">click here to play</a>.</p>
-                                <video controls autoplay>
-                                    <source src="${videoUrl}" type="video/mp4">
-                                    Your browser does not support the video tag.
-                                </video>
-                            </div>
+                            <p class="message">در حال پخش: <strong>${filename}</strong></p>
+                            <video controls autoplay>
+                                <source src="${videoUrl}" type="video/mp4">
+                                مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+                            </video>
                         </div>
                     </body>
                     </html>
@@ -200,9 +192,9 @@ export default {
 
                     if (isNaN(start) || isNaN(end) || start < 0 || end >= parseInt(contentLength) || start > end) {
                         responseHeaders.set('Content-Range', `bytes */${contentLength}`);
-                        return new Response('Invalid range', { 
-                            status: 416, 
-                            headers: responseHeaders 
+                        return new Response('Invalid range', {
+                            status: 416,
+                            headers: responseHeaders
                         });
                     }
 
@@ -239,9 +231,9 @@ export default {
                     });
                 }
             } catch (error) {
-                return new Response(`Error: ${error.message}`, { 
-                    status: 400, 
-                    headers: corsHeaders 
+                return new Response(`Error: ${error.message}`, {
+                    status: 400,
+                    headers: corsHeaders
                 });
             }
         }
@@ -255,7 +247,3 @@ export default {
             return new Response(response.body, {
                 status: response.status,
                 headers: newHeaders,
-            });
-        }
-    }
-};
