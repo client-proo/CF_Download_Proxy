@@ -125,7 +125,7 @@ export default {
                         <meta charset="UTF-8">
                         <title>${filename}</title>
                         <style>
-                            body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #0091ff; }
+                            body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #696969; }
                             video { max-width: 100%; max-height: 100%; }
                         </style>
                     </head>
