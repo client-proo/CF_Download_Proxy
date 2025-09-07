@@ -1,4 +1,4 @@
-// دامنه ورکرتون یا نیم بهارو اینجا بزارید 
+// دامنه ورکر یا نیم بهار
 const Domain = 'https://nimbaha.363178.ir.cdn.ir'; 
 
 // تنظیمات احراز هویت HTTP
@@ -136,7 +136,6 @@ export default {
                 const htmlTemplate = `
                     <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -172,14 +171,13 @@ export default {
         }
 
         .downloadBtn img {
-            width: 30px !important; /* عرض ثابت برای همه آیکون‌ها */
-            height: 30px !important; /* ارتفاع ثابت برای همه آیکون‌ها */
-            object-fit: contain; /* حفظ تناسب تصویر */
-            vertical-align: middle; /* تراز عمودی با متن */
+            width: 30px !important;
+            height: 30px !important;
+            object-fit: contain;
+            vertical-align: middle;
         }
     </style>
 </head>
-
 <body>
     <nav>
         <div class="nleft">
@@ -316,16 +314,53 @@ export default {
             </center>
         </footer>
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.155.0/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/automat/controlkit.js@master/bin/controlKit.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sheryjs/dist/Shery.js"></script>
+    <script src="https://cdn.plyr.io/3.6.9/plyr.js"></script>
+    <script src="https://proavipatil.github.io/data/fs/src/script.js"></script>
+
+    <!-- توابع اصلاح‌شده برای دکمه‌های دانلود و کپی لینک -->
+    <script>
+        function streamDownload() {
+            const base64Data = window.location.pathname.replace('/stream/', '');
+            const downloadUrl = '${Domain}/dl/' + base64Data;
+            window.location.href = downloadUrl;
+        }
+
+        function copyStreamLink() {
+            const base64Data = window.location.pathname.replace('/stream/', '');
+            const downloadUrl = '${Domain}/dl/' + base64Data;
+            navigator.clipboard.writeText(downloadUrl).then(() => {
+                alert('لینک دانلود کپی شد!');
+            }).catch(err => {
+                console.error('خطا در کپی لینک:', err);
+                alert('خطا در کپی لینک');
+            });
+        }
+
+        function vlc_player() {
+            const base64Data = window.location.pathname.replace('/stream/', '');
+            const streamUrl = '${Domain}/stream/' + base64Data;
+            window.location.href = `vlc://${streamUrl}`;
+        }
+
+        function mx_player() {
+            const base64Data = window.location.pathname.replace('/stream/', '');
+            const streamUrl = '${Domain}/stream/' + base64Data;
+            window.location.href = `intent:${streamUrl}#Intent;package=com.mxtech.videoplayer.ad;end`;
+        }
+
+        function km_player() {
+            const base64Data = window.location.pathname.replace('/stream/', '');
+            const streamUrl = '${Domain}/stream/' + base64Data;
+            window.location.href = `kmplayer://${streamUrl}`;
+        }
+    </script>
 </body>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.155.0/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/automat/controlkit.js@master/bin/controlKit.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sheryjs/dist/Shery.js"></script>
-<script src="https://cdn.plyr.io/3.6.9/plyr.js"></script>
-<script src="https://proavipatil.github.io/data/fs/src/script.js"></script>
-
 </html>
                 `;
 
