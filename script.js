@@ -1,247 +1,228 @@
-// دامنه ورکرتون یا نیم بهارو اینجا بزارید 
-const Domain = 'https://nimbaha.363178.ir.cdn.ir'; 
+document.getElementById('proxyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-// تنظیمات احراز هویت HTTP
-const AUTH_ENABLED = false; // تغییر به true یا false برای فعال/غیرفعال کردن احراز هویت
-const USERNAME = 'admin';  // نام کاربری را اینجا تغییر دهید
-const PASSWORD = 'proxy123'; // رمز عبور را اینجا تغییر دهید
+    // Get all URLs (one per line)
+    const urlsText = document.getElementById('urlInput').value;
+    const urls = urlsText.split('\n').filter(url => url.trim() !== '');
 
-// کش برای ذخیره نتایج درخواست‌های تکراری
+    // Clear previous results
+    const resultsContainer = document.getElementById('results');
+    resultsContainer.innerHTML = '';
+
+    // Hide bulk actions until we have results
+    document.getElementById('bulkActionsContainer').style.display = 'none';
+
+    // Track all successful proxied URLs and their filenames
+    const allProxiedUrls = [];
+    const allFilenames = [];
+
+    // محدود کردن تعداد درخواست‌های همزمان
+    const maxConcurrentRequests = 3;
+    let activeFetches = 0;
+    const fetchQueue = [];
+
+    async function queuedFetch(url) {
+        if (activeFetches >= maxConcurrentRequests) {
+            // اگر تعداد درخواست‌های فعال به حداکثر رسیده، به صف افزوده می‌شود
+            return new Promise(resolve => {
+                fetchQueue.push(() => {
+                    activeFetches++;
+                    return fetch(url)
+                        .then(response => {
+                            activeFetches--;
+                            processQueue();
+                            return resolve(response);
+                        })
+                        .catch(error => {
+                            activeFetches--;
+                            processQueue();
+                            throw error;
+                        });
+                });
+            });
+        }
+
+        activeFetches++;
+        return fetch(url)
+            .then(response => {
+                activeFetches--;
+                processQueue();
+                return response;
+            })
+            .catch(error => {
+                activeFetches--;
+                processQueue();
+                throw error;
+            });
+    }
+
+    function processQueue() {
+        if (fetchQueue.length > 0 && activeFetches < maxConcurrentRequests) {
+            const nextFetch = fetchQueue.shift();
+            nextFetch();
+        }
+    }
+
+    // Process each URL
+    for (const url of urls) {
+        const trimmedUrl = url.trim();
+        if (!trimmedUrl) continue;
+
+        try {
+            // Create a result container for this URL
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result-item';
+            resultsContainer.appendChild(resultDiv);
+
+            // Show loading state
+            resultDiv.innerHTML = `
+                <div class="url-original">${trimmedUrl}</div>
+                <div class="loading">Processing...</div>
+            `;
+
+            // Fetch the proxied URL using our queue system
+            const response = await queuedFetch(`/proxy?url=${encodeURIComponent(trimmedUrl)}`);
+            const data = await response.json();
+
+            // Add to our collections
+            allProxiedUrls.push(data.proxiedUrl);
+            allFilenames.push(data.filename);
+
+            // Update the result container with the proxied URL
+            resultDiv.innerHTML = `
+                <div class="url-original">${trimmedUrl}</div>
+                <div class="url-proxied">${data.proxiedUrl}</div>
+                <div class="filename">نام فایل: ${data.filename}</div>
+                <div class="action-buttons">
+                    <a class="download-btn" href="${data.proxiedUrl}" target="_blank">دانلود</a>
+                    <button class="copy-btn" data-url="${data.proxiedUrl}">کپی لینک</button>
+                </div>
+            `;
+
+            // Add event listener to the copy button
+            resultDiv.querySelector('.copy-btn').addEventListener('click', function() {
+                const urlToCopy = this.getAttribute('data-url');
+                copyToClipboard(urlToCopy, this);
+            });
+
+        } catch (error) {
+            // Handle error
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result-item error';
+            resultDiv.innerHTML = `
+                <div class="url-original">${trimmedUrl}</div>
+                <div class="error-message">Error: ${error.message}</div>
+            `;
+            resultsContainer.appendChild(resultDiv);
+        }
+    }
+
+    // Show the results container
+    resultsContainer.style.display = 'block';
+
+    // Show bulk actions if we have any results
+    if (allProxiedUrls.length > 0) {
+        document.getElementById('bulkActionsContainer').style.display = 'flex';
+
+        // Add event listener for Copy All button
+        document.getElementById('copyAllBtn').addEventListener('click', function() {
+            copyToClipboard(allProxiedUrls.join('\n'), this, '!همه لینک ها در کلیپ بورد کپی شدند');
+        });
+
+        // Add event listener for Download All button
+        document.getElementById('downloadAllBtn').addEventListener('click', function() {
+            downloadAllLinks(allProxiedUrls, allFilenames);
+        });
+    }
+});
+
+// کش برای نگهداری درخواست‌های تکراری
 const cache = new Map();
 
-function toBase64(str) {
-    return btoa(unescape(encodeURIComponent(str)));
+async function cachedFetch(url) {
+    if (cache.has(url)) {
+        return cache.get(url);
+    }
+
+    const response = await fetch(url);
+    const data = await response.json();
+    cache.set(url, data);
+    return data;
 }
 
-function fromBase64(b64) {
+// Function to copy text to clipboard
+function copyToClipboard(text, buttonElement, message = '!کپی شد') {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show success message on button
+        const originalText = buttonElement.textContent;
+        buttonElement.textContent = '!کپی شد';
+
+        // Reset button text after 2 seconds
+        setTimeout(() => {
+            buttonElement.textContent = originalText;
+        }, 2000);
+
+        // If this is a bulk action, also show message in the span
+        if (buttonElement.id === 'copyAllBtn') {
+            showActionMessage(message);
+        }
+    })
+    .catch(function(error) {
+        console.error('Could not copy text: ', error);
+
+        // Show error message
+        if (buttonElement.id === 'copyAllBtn') {
+            showActionMessage('Failed to copy. Try again.', true);
+        }
+    });
+}
+
+// Function to download all links as a text file
+function downloadAllLinks(urls, filenames) {
     try {
-        return decodeURIComponent(escape(atob(b64)));
+        // Create content for the text file
+        let content = '';
+        for (let i = 0; i < urls.length; i++) {
+            content += `${filenames[i]}:\n${urls[i]}\n`;
+        }
+
+        // Create a blob with the content
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+
+        // Create a temporary link and trigger the download
+        const downloadLink = document.createElement('a');
+        downloadLink.href = url;
+        downloadLink.download = `proxied_links_${new Date().toISOString().slice(0,10)}.txt`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        // Release the object URL
+        URL.revokeObjectURL(url);
+
+        // Show success message
+        showActionMessage('!لینک ها به صورت فایل متنی دانلود شدند');
+
     } catch (error) {
-        throw new Error('Invalid Base64 string');
+        console.error('Could not download links: ', error);
+        showActionMessage('Failed to download. Try again.', true);
     }
 }
 
-// تابع بررسی احراز هویت HTTP Basic
-function checkAuth(request) {
-    if (!AUTH_ENABLED) return true;
+// Function to show action messages
+function showActionMessage(message, isError = false) {
+    const messageElement = document.getElementById('actionMessage');
+    messageElement.textContent = message;
+    messageElement.style.opacity = '1';
 
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Basic ')) {
-        return false;
+    if (isError) {
+        messageElement.classList.add('error');
+    } else {
+        messageElement.classList.remove('error');
     }
 
-    const encodedCredentials = authHeader.split(' ')[1];
-    const decodedCredentials = atob(encodedCredentials);
-    const [username, password] = decodedCredentials.split(':');
-
-    return username === USERNAME && password === PASSWORD;
+    setTimeout(() => {
+        messageElement.style.opacity = '0';
+    }, 2000);
 }
-
-// تابع تشخیص فایل ویدیو
-function isVideoFile(filename) {
-    const videoExt = ['.mp4', '.mkv', '.webm', '.avi', '.mov'];
-    const lower = filename.toLowerCase();
-    return videoExt.some(ext => lower.endsWith(ext));
-}
-
-export default {
-    async fetch(request, env, ctx) {
-        const url = new URL(request.url);
-        const { pathname } = url;
-
-        const corsHeaders = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': '*',
-        };
-
-        if (request.method === 'OPTIONS') {
-            return new Response(null, { headers: corsHeaders });
-        }
-
-        if (!pathname.endsWith('.css') && !pathname.endsWith('.js')) {
-            if (!checkAuth(request)) {
-                return new Response('Unauthorized', {
-                    status: 401,
-                    headers: {
-                        ...corsHeaders,
-                        'WWW-Authenticate': 'Basic realm="Multi-URL Proxy", charset="UTF-8"'
-                    }
-                });
-            }
-        }
-
-        if (pathname === '/proxy') {
-            const originalUrl = new URL(request.url).searchParams.get('url');
-            if (!originalUrl) {
-                return new Response('URL parameter is missing', { status: 400, headers: corsHeaders });
-            }
-
-            const cacheKey = originalUrl;
-            if (cache.has(cacheKey)) {
-                return new Response(JSON.stringify(cache.get(cacheKey)), {
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-                });
-            }
-
-            const urlWithoutParams = originalUrl.split('?')[0];
-            const filename = urlWithoutParams.split('/').pop();
-
-            const encodedData = toBase64(JSON.stringify({ url: originalUrl, filename }));
-            const proxiedUrl = `${Domain}/dl/${encodedData}`;
-
-            // فقط برای فایل‌های ویدیویی لینک پلیر ساخته میشه
-            let responseData = {
-                proxiedUrl,
-                filename
-            };
-            if (isVideoFile(filename)) {
-                responseData.playerUrl = `${Domain}/stream/${encodedData}`;
-            }
-
-            cache.set(cacheKey, responseData);
-
-            return new Response(JSON.stringify(responseData), {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
-        }
-
-        else if (pathname.startsWith('/stream/')) {
-            const base64Data = pathname.replace('/stream/', '');
-
-            if (!base64Data) {
-                return new Response('Data parameter is missing', { status: 400, headers: corsHeaders });
-            }
-
-            try {
-                const decodedData = fromBase64(base64Data);
-                const { filename } = JSON.parse(decodedData);
-                const videoUrl = `${Domain}/dl/${base64Data}`;
-
-                const html = `
-                    <!DOCTYPE html>
-                    <html lang="en">
-                    <head>
-                        <meta charset="UTF-8">
-                        <title>${filename}</title>
-                        <style>
-                            body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #000; }
-                            video { max-width: 100%; max-height: 100%; }
-                        </style>
-                    </head>
-                    <body>
-                        <video controls autoplay>
-                            <source src="${videoUrl}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </body>
-                    </html>
-                `;
-
-                return new Response(html, {
-                    headers: { ...corsHeaders, 'Content-Type': 'text/html' }
-                });
-
-            } catch (error) {
-                return new Response(`Error: ${error.message}`, { status: 400, headers: corsHeaders });
-            }
-        }
-
-        else if (pathname.startsWith('/dl/')) {
-            const base64Data = pathname.replace('/dl/', '');
-            if (!base64Data) {
-                return new Response('Data parameter is missing', { status: 400, headers: corsHeaders });
-            }
-
-            try {
-                const decodedData = fromBase64(base64Data);
-                const { url: decodedUrl, filename } = JSON.parse(decodedData);
-
-                const range = request.headers.get('Range');
-                let fetchHeaders = new Headers(request.headers);
-
-                const headResponse = await fetch(decodedUrl, { method: 'HEAD' });
-                if (!headResponse.ok) {
-                    throw new Error(`Failed to get file information: ${headResponse.status}`);
-                }
-
-                const contentLength = headResponse.headers.get('Content-Length');
-                if (!contentLength) {
-                    throw new Error('Could not determine file size');
-                }
-
-                const responseHeaders = new Headers();
-                responseHeaders.set('Content-Disposition', `attachment; filename="${filename}"`);
-                responseHeaders.set('Accept-Ranges', 'bytes');
-                responseHeaders.set('Content-Length', contentLength);
-
-                Object.keys(corsHeaders).forEach(key => {
-                    responseHeaders.set(key, corsHeaders[key]);
-                });
-
-                if (range) {
-                    const parts = range.replace(/bytes=/, "").split("-");
-                    const start = parseInt(parts[0], 10);
-                    const end = parts[1] ? parseInt(parts[1], 10) : parseInt(contentLength) - 1;
-
-                    if (isNaN(start) || isNaN(end) || start < 0 || end >= parseInt(contentLength) || start > end) {
-                        responseHeaders.set('Content-Range', `bytes */${contentLength}`);
-                        return new Response('Invalid range', { 
-                            status: 416, 
-                            headers: responseHeaders 
-                        });
-                    }
-
-                    const chunkSize = (end - start) + 1;
-
-                    fetchHeaders.set('Range', `bytes=${start}-${end}`);
-                    responseHeaders.set('Content-Range', `bytes ${start}-${end}/${contentLength}`);
-                    responseHeaders.set('Content-Length', chunkSize.toString());
-
-                    const rangeResponse = await fetch(decodedUrl, { headers: fetchHeaders });
-                    if (!rangeResponse.ok && rangeResponse.status !== 206) {
-                        throw new Error(`Failed to fetch range: ${rangeResponse.status}`);
-                    }
-
-                    const { readable, writable } = new TransformStream();
-                    rangeResponse.body.pipeTo(writable).catch(err => console.error('Stream error:', err));
-
-                    return new Response(readable, {
-                        status: 206,
-                        headers: responseHeaders
-                    });
-                } else {
-                    const response = await fetch(decodedUrl, { headers: fetchHeaders });
-                    if (!response.ok) {
-                        throw new Error(`Failed to fetch file: ${response.status}`);
-                    }
-
-                    const { readable, writable } = new TransformStream();
-                    response.body.pipeTo(writable).catch(err => console.error('Stream error:', err));
-
-                    return new Response(readable, {
-                        status: 200,
-                        headers: responseHeaders
-                    });
-                }
-            } catch (error) {
-                return new Response(`Error: ${error.message}`, { 
-                    status: 400, 
-                    headers: corsHeaders 
-                });
-            }
-        }
-
-        else {
-            const response = await env.ASSETS.fetch(request);
-            const newHeaders = new Headers(response.headers);
-            Object.keys(corsHeaders).forEach(key => {
-                newHeaders.set(key, corsHeaders[key]);
-            });
-            return new Response(response.body, {
-                status: response.status,
-                headers: newHeaders,
-            });
-        }
-    }
-};
