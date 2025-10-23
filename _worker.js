@@ -1,6 +1,12 @@
-const Domain = 'https://free.117016.ir.cdn.ir';
-const TOKEN = '8455583300:AAEEqEvqXZMfjQS5bdnnJ-3CG5TPlnzD8fo'; // توکن ربات را وارد کنید
-const TELEGRAM_API = `https://api.telegram.org/bot${TOKEN}`;
+// دامنه ورکرتون یا نیم بهارو اینجا بزارید 
+const Domain = 'https://free.117016.ir.cdn.ir'; 
+
+// تنظیمات احراز هویت HTTP
+const AUTH_ENABLED = false; // تغییر به true یا false برای فعال/غیرفعال کردن احراز هویت
+const USERNAME = 'admin';  // نام کاربری را اینجا تغییر دهید
+const PASSWORD = 'proxy123'; // رمز عبور را اینجا تغییر دهید
+
+// کش برای ذخیره نتایج درخواست‌های تکراری
 const cache = new Map();
 
 function toBase64(str) {
@@ -15,95 +21,227 @@ function fromBase64(b64) {
     }
 }
 
+// تابع بررسی احراز هویت HTTP Basic
+function checkAuth(request) {
+    if (!AUTH_ENABLED) return true;
+
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Basic ')) {
+        return false;
+    }
+
+    const encodedCredentials = authHeader.split(' ')[1];
+    const decodedCredentials = atob(encodedCredentials);
+    const [username, password] = decodedCredentials.split(':');
+
+    return username === USERNAME && password === PASSWORD;
+}
+
+// تابع تشخیص فایل ویدیو
 function isVideoFile(filename) {
     const videoExt = ['.mp4', '.mkv', '.webm', '.avi', '.mov'];
     const lower = filename.toLowerCase();
     return videoExt.some(ext => lower.endsWith(ext));
 }
 
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-async function sendTelegramMessage(chatId, text) {
-    const response = await fetch(`${TELEGRAM_API}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text })
-    });
-    return response.ok;
-}
-
 export default {
-    async fetch(request) {
+    async fetch(request, env, ctx) {
         const url = new URL(request.url);
-        if (url.pathname === '/webhook') {
-            const update = await request.json();
-            const chatId = update.message?.chat?.id;
-            const text = update.message?.text;
+        const { pathname } = url;
 
-            if (!chatId || !text) {
-                return new Response('Invalid message', { status: 400 });
+        const corsHeaders = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': '*',
+        };
+
+        if (request.method === 'OPTIONS') {
+            return new Response(null, { headers: corsHeaders });
+        }
+
+        if (!pathname.endsWith('.css') && !pathname.endsWith('.js')) {
+            if (!checkAuth(request)) {
+                return new Response('Unauthorized', {
+                    status: 401,
+                    headers: {
+                        ...corsHeaders,
+                        'WWW-Authenticate': 'Basic realm="Multi-URL Proxy", charset="UTF-8"'
+                    }
+                });
+            }
+        }
+
+        if (pathname === '/proxy') {
+            const originalUrl = new URL(request.url).searchParams.get('url');
+            if (!originalUrl) {
+                return new Response('URL parameter is missing', { status: 400, headers: corsHeaders });
             }
 
-            let originalUrl;
-            try {
-                originalUrl = new URL(text);
-            } catch (error) {
-                await sendTelegramMessage(chatId, 'لطفاً یک URL معتبر وارد کنید.');
-                return new Response('OK', { status: 200 });
-            }
-
-            const cacheKey = originalUrl.href;
+            const cacheKey = originalUrl;
             if (cache.has(cacheKey)) {
-                const cachedData = cache.get(cacheKey);
-                await sendTelegramMessage(chatId, `نام فایل: ${cachedData.filename}\nحجم فایل: ${cachedData.fileSize}\nلینک پروکسی‌شده: ${cachedData.proxiedUrl}`);
-                return new Response('OK', { status: 200 });
+                return new Response(JSON.stringify(cache.get(cacheKey)), {
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            }
+
+            const urlWithoutParams = originalUrl.split('?')[0];
+            const filename = urlWithoutParams.split('/').pop();
+
+            const encodedData = toBase64(JSON.stringify({ url: originalUrl, filename }));
+            const proxiedUrl = `${Domain}/dl/${encodedData}`;
+
+            // فقط برای فایل‌های ویدیویی لینک پلیر ساخته میشه
+            let responseData = {
+                proxiedUrl,
+                filename
+            };
+            if (isVideoFile(filename)) {
+                responseData.playerUrl = `${Domain}/stream/${encodedData}`;
+            }
+
+            cache.set(cacheKey, responseData);
+
+            return new Response(JSON.stringify(responseData), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        else if (pathname.startsWith('/stream/')) {
+            const base64Data = pathname.replace('/stream/', '');
+
+            if (!base64Data) {
+                return new Response('Data parameter is missing', { status: 400, headers: corsHeaders });
             }
 
             try {
-                const urlWithoutParams = originalUrl.pathname.split('?')[0];
-                const filename = urlWithoutParams.split('/').pop();
+                const decodedData = fromBase64(base64Data);
+                const { filename } = JSON.parse(decodedData);
+                const videoUrl = `${Domain}/dl/${base64Data}`;
 
-                const headResponse = await fetch(originalUrl.href, { method: 'HEAD' });
+                const html = `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>${filename}</title>
+                        <style>
+                            body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #000; }
+                            video { max-width: 100%; max-height: 100%; }
+                        </style>
+                    </head>
+                    <body>
+                        <video controls autoplay>
+                            <source src="${videoUrl}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </body>
+                    </html>
+                `;
+
+                return new Response(html, {
+                    headers: { ...corsHeaders, 'Content-Type': 'text/html' }
+                });
+
+            } catch (error) {
+                return new Response(`Error: ${error.message}`, { status: 400, headers: corsHeaders });
+            }
+        }
+
+        else if (pathname.startsWith('/dl/')) {
+            const base64Data = pathname.replace('/dl/', '');
+            if (!base64Data) {
+                return new Response('Data parameter is missing', { status: 400, headers: corsHeaders });
+            }
+
+            try {
+                const decodedData = fromBase64(base64Data);
+                const { url: decodedUrl, filename } = JSON.parse(decodedData);
+
+                const range = request.headers.get('Range');
+                let fetchHeaders = new Headers(request.headers);
+
+                const headResponse = await fetch(decodedUrl, { method: 'HEAD' });
                 if (!headResponse.ok) {
-                    throw new Error(`خطا در دریافت اطلاعات فایل: ${headResponse.status}`);
+                    throw new Error(`Failed to get file information: ${headResponse.status}`);
                 }
 
                 const contentLength = headResponse.headers.get('Content-Length');
                 if (!contentLength) {
-                    throw new Error('نمی‌توان حجم فایل را تعیین کرد.');
+                    throw new Error('Could not determine file size');
                 }
 
-                const encodedData = toBase64(JSON.stringify({ url: originalUrl.href, filename }));
-                const proxiedUrl = `${Domain}/dl/${encodedData}`;
+                const responseHeaders = new Headers();
+                responseHeaders.set('Content-Disposition', `attachment; filename="${filename}"`);
+                responseHeaders.set('Accept-Ranges', 'bytes');
+                responseHeaders.set('Content-Length', contentLength);
 
-                let responseData = {
-                    proxiedUrl,
-                    filename,
-                    fileSize: formatFileSize(parseInt(contentLength))
-                };
+                Object.keys(corsHeaders).forEach(key => {
+                    responseHeaders.set(key, corsHeaders[key]);
+                });
 
-                cache.set(cacheKey, responseData);
+                if (range) {
+                    const parts = range.replace(/bytes=/, "").split("-");
+                    const start = parseInt(parts[0], 10);
+                    const end = parts[1] ? parseInt(parts[1], 10) : parseInt(contentLength) - 1;
 
-                let responseMessage = `نام فایل: ${filename}\nحجم فایل: ${responseData.fileSize}\nلینک پروکسی‌شده: ${proxiedUrl}`;
-                if (isVideoFile(filename)) {
-                    const playerUrl = `${Domain}/stream/${encodedData}`;
-                    responseMessage += `\nلینک پخش: ${playerUrl}`;
+                    if (isNaN(start) || isNaN(end) || start < 0 || end >= parseInt(contentLength) || start > end) {
+                        responseHeaders.set('Content-Range', `bytes */${contentLength}`);
+                        return new Response('Invalid range', { 
+                            status: 416, 
+                            headers: responseHeaders 
+                        });
+                    }
+
+                    const chunkSize = (end - start) + 1;
+
+                    fetchHeaders.set('Range', `bytes=${start}-${end}`);
+                    responseHeaders.set('Content-Range', `bytes ${start}-${end}/${contentLength}`);
+                    responseHeaders.set('Content-Length', chunkSize.toString());
+
+                    const rangeResponse = await fetch(decodedUrl, { headers: fetchHeaders });
+                    if (!rangeResponse.ok && rangeResponse.status !== 206) {
+                        throw new Error(`Failed to fetch range: ${rangeResponse.status}`);
+                    }
+
+                    const { readable, writable } = new TransformStream();
+                    rangeResponse.body.pipeTo(writable).catch(err => console.error('Stream error:', err));
+
+                    return new Response(readable, {
+                        status: 206,
+                        headers: responseHeaders
+                    });
+                } else {
+                    const response = await fetch(decodedUrl, { headers: fetchHeaders });
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch file: ${response.status}`);
+                    }
+
+                    const { readable, writable } = new TransformStream();
+                    response.body.pipeTo(writable).catch(err => console.error('Stream error:', err));
+
+                    return new Response(readable, {
+                        status: 200,
+                        headers: responseHeaders
+                    });
                 }
-
-                await sendTelegramMessage(chatId, responseMessage);
-                return new Response('OK', { status: 200 });
             } catch (error) {
-                await sendTelegramMessage(chatId, `خطا: ${error.message}`);
-                return new Response('OK', { status: 200 });
+                return new Response(`Error: ${error.message}`, { 
+                    status: 400, 
+                    headers: corsHeaders 
+                });
             }
         }
 
-        return new Response('Webhook not found', { status: 404 });
+        else {
+            const response = await env.ASSETS.fetch(request);
+            const newHeaders = new Headers(response.headers);
+            Object.keys(corsHeaders).forEach(key => {
+                newHeaders.set(key, corsHeaders[key]);
+            });
+            return new Response(response.body, {
+                status: response.status,
+                headers: newHeaders,
+            });
+        }
     }
 };
